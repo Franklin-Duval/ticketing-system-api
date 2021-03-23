@@ -14,4 +14,5 @@ routers.register(r'relance', views.RelancerViewSet)
 
 urlpatterns = [
     path('', include(routers.urls)),
+    path('login/', views.login)
 ]
