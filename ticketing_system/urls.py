@@ -16,7 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from ticketing_api import views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('ticketing_api.urls'))
+    path('api/', include('ticketing_api.urls')),
+    path('', views.root)
 ]
