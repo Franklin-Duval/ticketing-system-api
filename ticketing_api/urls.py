@@ -16,5 +16,18 @@ routers.register(r'relance', views.RelancerViewSet)
 urlpatterns = [
     path('', include(routers.urls)),
     path('login/', views.login),
-    path('tickets/', views.get_tickets)
+    path('all-tickets/', views.get_tickets),
+    path('new-tickets/', views.get_new_tickets),
+    path('waiting-tickets/', views.get_waiting_tickets),
+    path('finished-tickets/', views.get_finished_tickets),
+    
+    path('all-user-tickets/<str:id>/', views.get_user_tickets),
+    path('waiting-user-tickets/<str:id>/', views.get_user_waiting_tickets),
+    path('finished-user-tickets/<str:id>/', views.get_user_finished_tickets),
+
+    path('all-technician-tickets/<str:id>/', views.get_technician_tickets),
+    path('waiting-technician-tickets/<str:id>/', views.get_technician_waiting_tickets),
+    path('finished-technician-tickets/<str:id>/', views.get_technician_finished_tickets),
+
+    path('techniciens/', views.get_technicien),
 ]

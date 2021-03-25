@@ -103,10 +103,11 @@ def login(request):
             }
             return Response(result)     
 
-@api_view(['GET'])
-def get_tickets(request):
-
-    tickets = Ticket.objects.all()
+def ticket_getter(tickets :Ticket, request):
+    """
+        Basic ticket function used by all other views based on collecting tickets.
+        This function is used to limit code repetition
+    """
     serializer = TicketSerializer(tickets, many=True, context={'request': request})
 
     serializer_ticket = serializer.data
@@ -174,6 +175,142 @@ def get_tickets(request):
     }
 
     return Response(result)
+
+@api_view(['GET'])
+def get_technicien(request):
+
+    technicien = Technicien.objects.all()
+    serializer = TechnicienSerializer(technicien, many=True, context={'request': request})
+
+    serializer_technicien = serializer.data
+    for tech in serializer_technicien:
+        #modify service field
+        service = tech["service"]
+        id = service[service.find('service')+7: ]
+        id = id.replace('/', '')
+
+        service = Service.objects.get(id=id)
+        serializer = ServiceSerializer(service, context={'request': request})
+        tech["service"] = serializer.data["nom"]
+        
+        #count number of current tickets
+        for t in technicien:
+            if str(t.id) == tech["id"]:
+                tickets = Ticket.objects.filter(technicien=t)
+                tech["number_ticket"] = len(tickets)
+                break
+        
+        #arrange date format
+        dates = tech["date_inscription"]
+        dates = dates[ : 19]
+        dates = dates.replace('T', ' à ')
+        tech["date_inscription"] = dates
+    
+    result = {
+        "success": True,
+        "message": "Opération éffectuée avec succès",
+        "data": serializer_technicien
+    }
+
+    return Response(result)
+
+@api_view(['GET'])
+def get_tickets(request):
+    """
+        This view permits to get all the available tickets
+    """
+
+    tickets = Ticket.objects.filter(deleted=False).order_by('-date_creation')
+    return ticket_getter(tickets=tickets, request=request)
+
+@api_view(['GET'])
+def get_new_tickets(request):
+    """
+        This view permits to get new the tickets (tickets that haven't been allocated to a technician)
+    """
+
+    tickets = Ticket.objects.filter(technicien=None, deleted=False).order_by('-date_creation')
+    return ticket_getter(tickets=tickets, request=request)
+
+@api_view(['GET'])
+def get_waiting_tickets(request):
+    """
+        This view permits to get all waiting tickets (tickets that have been allocated to a technician)
+    """
+
+    tickets = Ticket.objects.filter(deleted=False, etat="En cours").exclude(technicien=None).order_by('-date_creation')
+    return ticket_getter(tickets=tickets, request=request)
+
+@api_view(['GET'])
+def get_finished_tickets(request):
+    """
+        This view permits to get all the finished tickets (tickets that have been allocated to a technician)
+    """
+
+    tickets = Ticket.objects.filter(deleted=False, etat="Terminé").exclude(technicien=None).order_by('-date_creation')
+    return ticket_getter(tickets=tickets, request=request)
+
+@api_view(['GET'])
+def get_user_tickets(request, id):
+    """
+        This view permits to get all a user's available tickets
+    """
+
+    client = Client.objects.get(id=id)
+    tickets = Ticket.objects.filter(deleted=False, client=client).exclude(technicien=None).order_by('-date_creation')
+    return ticket_getter(tickets=tickets, request=request)
+
+@api_view(['GET'])
+def get_user_waiting_tickets(request, id):
+    """
+        This view permits to get all waiting tickets of a user (tickets that have been allocated to a technician)
+    """
+
+    client = Client.objects.get(id=id)
+    tickets = Ticket.objects.filter(deleted=False, client=client, etat="En cours").exclude(technicien=None).order_by('-date_creation')
+    return ticket_getter(tickets=tickets, request=request)
+
+@api_view(['GET'])
+def get_user_finished_tickets(request, id):
+    """
+        This view permits to get all the finished tickets of a user (tickets that have been allocated to a technician)
+    """
+
+    client = Client.objects.get(id=id)
+    tickets = Ticket.objects.filter(deleted=False, client=client, etat="Terminé").exclude(technicien=None).order_by('-date_creation')
+    return ticket_getter(tickets=tickets, request=request)
+
+
+@api_view(['GET'])
+def get_technician_tickets(request, id):
+    """
+        This view permits to get all available tickets of a technician
+    """
+
+    technicien = Technicien.objects.get(id=id)
+    tickets = Ticket.objects.filter(deleted=False, technicien=technicien).exclude(technicien=None).order_by('-date_creation')
+    return ticket_getter(tickets=tickets, request=request)
+
+@api_view(['GET'])
+def get_technician_waiting_tickets(request, id):
+    """
+        This view permits to get all waiting tickets of a technician (tickets that have been allocated to a technician)
+    """
+
+    technicien = Technicien.objects.get(id=id)
+    tickets = Ticket.objects.filter(deleted=False, technicien=technicien, etat="En cours").exclude(technicien=None).order_by('-date_creation')
+    return ticket_getter(tickets=tickets, request=request)
+
+@api_view(['GET'])
+def get_technician_finished_tickets(request, id):
+    """
+        This view permits to get all the finished tickets of a technician (tickets that have been allocated to a technician)
+    """
+
+    technicien = Technicien.objects.get(id=id)
+    tickets = Ticket.objects.filter(deleted=False, technicien=technicien, etat="Terminé").exclude(technicien=None).order_by('-date_creation')
+    return ticket_getter(tickets=tickets, request=request)
+
 
 def root(request):
     return redirect('api/')
