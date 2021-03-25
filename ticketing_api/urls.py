@@ -4,6 +4,7 @@ from rest_framework import routers
 from . import views
 
 routers = routers.DefaultRouter()
+routers.register(r'utilisateur', views.UtilisateurViewSet)
 routers.register(r'administrateur', views.AdministrateurViewSet)
 routers.register(r'ticket', views.TicketViewSet)
 routers.register(r'technicien', views.TechnicienViewSet)
@@ -14,5 +15,6 @@ routers.register(r'relance', views.RelancerViewSet)
 
 urlpatterns = [
     path('', include(routers.urls)),
-    path('login/', views.login)
+    path('login/', views.login),
+    path('tickets/', views.get_tickets)
 ]

@@ -42,8 +42,7 @@ class Probleme(models.Model):
         ('-1', 'Inconnu'),
         ('0', 'Normal'),
         ('1', 'Urgent'),
-        ('2', 'Très urgent'),
-        ('3', 'Critique')
+        ('2', 'Critique')
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

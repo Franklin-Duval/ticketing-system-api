@@ -13,6 +13,7 @@ class UtilisateurSerializer(serializers.HyperlinkedModelSerializer):
             'email',
             'role',
             'date_inscription',
+            'password'
         ]
 
 class TicketSerializer(serializers.HyperlinkedModelSerializer):
@@ -54,6 +55,7 @@ class ClientSerializer(serializers.HyperlinkedModelSerializer):
             'email',
             'role',
             'date_inscription',
+            'password'
         ]
 
 class TechnicienSerializer(serializers.HyperlinkedModelSerializer):
@@ -68,6 +70,7 @@ class TechnicienSerializer(serializers.HyperlinkedModelSerializer):
             'email',
             'role',
             'date_inscription',
+            'password'
         ]
 
 class AdministrateurSerializer(serializers.HyperlinkedModelSerializer):
@@ -81,6 +84,7 @@ class AdministrateurSerializer(serializers.HyperlinkedModelSerializer):
             'email',
             'role',
             'date_inscription',
+            'password'
         ]
 
 class ProblemeSerializer(serializers.HyperlinkedModelSerializer):
