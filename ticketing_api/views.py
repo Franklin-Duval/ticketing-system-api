@@ -101,13 +101,9 @@ def login(request):
                 "message": "Vérifiez votre email et mot de passe",
                 "data": {},
             }
-            return Response(result)     
+            return Response(result, status=status.HTTP_200_OK)     
 
-def ticket_getter(tickets :Ticket, request):
-    """
-        Basic ticket function used by all other views based on collecting tickets.
-        This function is used to limit code repetition
-    """
+def ticket_sub_getter(tickets :Ticket, request):
     serializer = TicketSerializer(tickets, many=True, context={'request': request})
 
     serializer_ticket = serializer.data
@@ -174,7 +170,20 @@ def ticket_getter(tickets :Ticket, request):
         "data": serializer_ticket
     }
 
-    return Response(result)
+    return result
+
+def ticket_getter(tickets :Ticket, request):
+    """
+        Basic ticket function used by all other views based on collecting tickets.
+        This function is used to limit code repetition
+    """
+    result = ticket_sub_getter(tickets=tickets, request=request)
+
+    return Response(result, status=status.HTTP_200_OK)
+
+
+""" ---------------------------------------------- ADMINISTRATOR ---------------------------------------------- """
+
 
 @api_view(['GET'])
 def get_technicien(request):
@@ -212,7 +221,7 @@ def get_technicien(request):
         "data": serializer_technicien
     }
 
-    return Response(result)
+    return Response(result, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def get_tickets(request):
@@ -244,11 +253,91 @@ def get_waiting_tickets(request):
 @api_view(['GET'])
 def get_finished_tickets(request):
     """
-        This view permits to get all the finished tickets (tickets that have been allocated to a technician)
+        This view permits to get all the finished tickets
     """
 
     tickets = Ticket.objects.filter(deleted=False, etat="Terminé").exclude(technicien=None).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
+
+@api_view(['GET'])
+def get_relance_tickets(request):
+    """
+        This view permits to get all the relanced tickets
+    """
+
+    tickets = Ticket.objects.filter(deleted=False).exclude(etat="Terminé").order_by('-date_creation')
+
+    #get all relanced associated to a ticket
+    relance = []
+    ticket_relance = []     #contains all the tickets which have been relanced
+    for tick in tickets:
+        if len(Relancer.objects.filter(ticket=tick)) > 0:
+            relance.append(Relancer.objects.get(ticket=tick))
+            ticket_relance.append(tick)
+    
+    ticket_response = ticket_sub_getter(tickets=ticket_relance, request=request)    #serialize all relanced tickets
+
+    #update data field in response so as to add relanced date and number of relance
+    for data in ticket_response["data"]:
+        for tick in relance:
+            if str(tick.ticket.id) == data["id"]:
+                #format date
+                dates = str(tick.date_updated)
+                dates = dates[ : 19]
+                
+                data["date_created"] = dates
+                data["nombre_relance"] = tick.nombre_relance
+                break
+    
+    return Response(ticket_response, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def ticket_to_technician(request):
+    """
+        This view permits an administrator to affect a ticket to a technician
+    """
+
+    if (("admin" not in request.data) or ("technicien" not in request.data) or ("ticket" not in request.data)):
+        result = {
+            "success": False,
+            "message": "Seul les champs 'admin' et 'technicien' sont acceptés",
+            "data": {}
+        }
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        
+    if (request.method=='POST'):
+        idAdmin = request.data["admin"]
+        idTechnicien = request.data["technicien"]
+        idTicket = request.data["ticket"]
+
+        ticket = Ticket.objects.get(id = idTicket)
+        technicien = Technicien.objects.get(id = idTechnicien)
+        admin = Administrateur.objects.get(id = idAdmin)
+
+        if ticket.technicien is None:
+            result = {
+                "success": True,
+                "message": "Le ticket a été attribué avec success à un technicien",
+            }
+        else:
+            result = {
+                "success": True,
+                "message": "Le technicien affecté au ticket a été changé avec success",
+            }
+        
+        ticket.technicien = technicien
+        ticket.admin = admin
+        ticket.etat = "En cours"
+        ticket.save()
+
+        serializer = TicketSerializer(ticket, context={'request': request})
+        result["data"] = serializer.data
+
+        return Response(result, status=status.HTTP_200_OK)
+
+
+""" ---------------------------------------------- CLIENT ---------------------------------------------- """
+
 
 @api_view(['GET'])
 def get_user_tickets(request, id):
@@ -280,6 +369,77 @@ def get_user_finished_tickets(request, id):
     tickets = Ticket.objects.filter(deleted=False, client=client, etat="Terminé").exclude(technicien=None).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
 
+@api_view(['GET'])
+def get_user_relance_tickets(request, id):
+    """
+        This view permits to get all the relanced tickets of a user
+    """
+
+    client = Client.objects.get(id=id)
+    tickets = Ticket.objects.filter(deleted=False, client=client).exclude(etat="Terminé").order_by('-date_creation')
+
+    #get all relanced associated to a ticket
+    relance = []
+    ticket_relance = []     #contains all the tickets which have been relanced
+    for tick in tickets:
+        if len(Relancer.objects.filter(ticket=tick)) > 0:
+            relance.append(Relancer.objects.get(ticket=tick))
+            ticket_relance.append(tick)
+    
+    ticket_response = ticket_sub_getter(tickets=ticket_relance, request=request)    #serialize all relanced tickets
+
+    #update data field in response so as to add relanced date and number of relance
+    for data in ticket_response["data"]:
+        for tick in relance:
+            if str(tick.ticket.id) == data["id"]:
+                #format date
+                dates = str(tick.date_updated)
+                dates = dates[ : 19]
+                
+                data["date_created"] = dates
+                data["nombre_relance"] = tick.nombre_relance
+                break
+    
+    return Response(ticket_response, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def relance_a_ticket(request, id):
+    """
+        This view permits a user to relance a given ticket
+    """
+
+    ticket = Ticket.objects.get(id=id)
+    try:
+        #verify if a relance with this particular ticket exists. If it exists, we just increment the number of relance, else we create a new
+        relance = Relancer.objects.get(ticket=ticket)
+        relance.nombre_relance = relance.nombre_relance + 1
+        relance.save()
+        
+        serializer = RelancerSerializer(relance, context={'request': request})
+
+        result = {
+            "success": True,
+            "message": "Le nombre de relance de ce ticket a été mis à jour",
+            "data": serializer.data
+        }
+
+        return Response(result, status=status.HTTP_200_OK)
+    except:
+        relance = Relancer(ticket=ticket)
+
+        serializer = RelancerSerializer(relance, context={'request': request})
+
+        result = {
+            "success": True,
+            "message": "La nouvelle relance a été crée avec succès",
+            "data": serializer.data
+        }
+        relance.save()
+        return Response(result, status=status.HTTP_200_OK)
+
+
+""" ---------------------------------------------- TECHNICIAN ---------------------------------------------- """
+
 
 @api_view(['GET'])
 def get_technician_tickets(request, id):
@@ -310,6 +470,57 @@ def get_technician_finished_tickets(request, id):
     technicien = Technicien.objects.get(id=id)
     tickets = Ticket.objects.filter(deleted=False, technicien=technicien, etat="Terminé").exclude(technicien=None).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
+
+
+@api_view(['GET'])
+def get_technician_relance_tickets(request, id):
+    """
+        This view permits to get all the relanced tickets of a technician
+    """
+
+    technicien = Technicien.objects.get(id=id)
+    tickets = Ticket.objects.filter(deleted=False, technicien=technicien).exclude(etat="Terminé").order_by('-date_creation')
+
+    #get all relanced associated to a ticket
+    relance = []
+    ticket_relance = []     #contains all the tickets which have been relanced
+    for tick in tickets:
+        if len(Relancer.objects.filter(ticket=tick)) > 0:
+            relance.append(Relancer.objects.get(ticket=tick))
+            ticket_relance.append(tick)
+    
+    ticket_response = ticket_sub_getter(tickets=ticket_relance, request=request)    #serialize all relanced tickets
+
+    #update data field in response so as to add relanced date and number of relance
+    for data in ticket_response["data"]:
+        for tick in relance:
+            if str(tick.ticket.id) == data["id"]:
+                #format date
+                dates = str(tick.date_updated)
+                dates = dates[ : 19]
+
+                data["date_created"] = dates
+                data["nombre_relance"] = tick.nombre_relance
+                break
+    
+    return Response(ticket_response, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def finalize_ticket(request, id):
+    """
+        This view is use to finalize a ticket
+    """
+    ticket = Ticket.objects.get(id=id)
+    ticket.etat = 'Terminé'
+    ticket.save()
+
+    result = {
+        "success": True,
+        "message": "La finalisation du ticket a été éffectué",
+        "data": {}
+    }
+
+    return Response(result, status=status.HTTP_200_OK)
 
 
 def root(request):

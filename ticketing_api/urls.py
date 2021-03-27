@@ -20,14 +20,22 @@ urlpatterns = [
     path('new-tickets/', views.get_new_tickets),
     path('waiting-tickets/', views.get_waiting_tickets),
     path('finished-tickets/', views.get_finished_tickets),
+    path('relanced-tickets/', views.get_relance_tickets),
+    path('affect-tickets/', views.ticket_to_technician),
     
     path('all-user-tickets/<str:id>/', views.get_user_tickets),
     path('waiting-user-tickets/<str:id>/', views.get_user_waiting_tickets),
     path('finished-user-tickets/<str:id>/', views.get_user_finished_tickets),
+    path('relanced-user-tickets/<str:id>/', views.get_user_relance_tickets),
+    path('relancer-tickets/<str:id>/', views.relance_a_ticket),         #permits a user to relance a ticket
 
     path('all-technician-tickets/<str:id>/', views.get_technician_tickets),
     path('waiting-technician-tickets/<str:id>/', views.get_technician_waiting_tickets),
     path('finished-technician-tickets/<str:id>/', views.get_technician_finished_tickets),
+    path('relanced-technician-tickets/<str:id>/', views.get_technician_relance_tickets),
+    path('finalize-tickets/<str:id>/', views.finalize_ticket),
+
+
 
     path('techniciens/', views.get_technicien),
 ]

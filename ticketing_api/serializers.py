@@ -104,6 +104,7 @@ class RelancerSerializer(serializers.HyperlinkedModelSerializer):
         model = Relancer
         fields = [
             'id',
+            'url',
             'date_created',
             'date_updated',
             'ticket',
