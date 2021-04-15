@@ -6,6 +6,8 @@ from rest_framework.decorators import api_view
 
 from .models import *
 from .serializers import *
+from .send_email import send_email
+
 # Create your views here.
 
 class TicketViewSet(viewsets.ModelViewSet):
@@ -205,7 +207,7 @@ def get_technicien(request):
         #count number of current tickets
         for t in technicien:
             if str(t.id) == tech["id"]:
-                tickets = Ticket.objects.filter(technicien=t)
+                tickets = Ticket.objects.filter(technicien=t).exclude(etat="Terminé")
                 tech["number_ticket"] = len(tickets)
                 break
         
@@ -511,6 +513,14 @@ def finalize_ticket(request, id):
         This view is use to finalize a ticket
     """
     ticket = Ticket.objects.get(id=id)
+    if ticket.etat == 'Terminé':
+        result = {
+            "success": True,
+            "message": "Le ticket avait déjà été finalisé",
+            "data": {}
+        }
+        return Response(result, status=status.HTTP_200_OK)
+    
     ticket.etat = 'Terminé'
     ticket.save()
 
@@ -519,6 +529,7 @@ def finalize_ticket(request, id):
         "message": "La finalisation du ticket a été éffectué",
         "data": {}
     }
+    print(send_email('franklinfrost14@gmail.com'))
 
     return Response(result, status=status.HTTP_200_OK)
 
