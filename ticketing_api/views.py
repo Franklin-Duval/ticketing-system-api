@@ -10,32 +10,37 @@ from .send_email import send_email
 
 # Create your views here.
 
+
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
+
 
 class AdministrateurViewSet(viewsets.ModelViewSet):
     queryset = Administrateur.objects.all()
     serializer_class = AdministrateurSerializer
 
+
 class TechnicienViewSet(viewsets.ModelViewSet):
     queryset = Technicien.objects.all()
     serializer_class = TechnicienSerializer
+
 
 class ClientViewSet(viewsets.ModelViewSet):
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
 
     def create(self, request, *args, **kwargs):
-        
+
         try:
-            serializer = ClientSerializer(data=request.data, context={'request': request})
+            serializer = ClientSerializer(
+                data=request.data, context={'request': request})
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
             """ data = serializer.data[0]
             data.pop("date_inscription") """
-            
+
             result = {
                 "success": True,
                 "message": "Client successfully created",
@@ -55,13 +60,16 @@ class ServiceViewSet(viewsets.ModelViewSet):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
 
+
 class ProblemeViewSet(viewsets.ModelViewSet):
     queryset = Probleme.objects.all()
     serializer_class = ProblemeSerializer
 
+
 class UtilisateurViewSet(viewsets.ModelViewSet):
     queryset = Utilisateur.objects.all()
     serializer_class = UtilisateurSerializer
+
 
 class RelancerViewSet(viewsets.ModelViewSet):
     queryset = Relancer.objects.all()
@@ -78,16 +86,17 @@ def login(request):
             "data": {}
         }
         return Response(result, status=status.HTTP_400_BAD_REQUEST)
-        
-    if (request.method=='POST'):
+
+    if (request.method == 'POST'):
         email = request.data["email"]
         password = request.data["password"]
-        
+
         user = None
         try:
             user = Utilisateur.objects.filter(email=email, password=password)
             print(user, "\n")
-            serializer = UtilisateurSerializer(user, many=True, context={'request': request})
+            serializer = UtilisateurSerializer(
+                user, many=True, context={'request': request})
             print(serializer.data)
             data = serializer.data[0]
             data.pop("date_inscription")
@@ -103,51 +112,54 @@ def login(request):
                 "message": "Vérifiez votre email et mot de passe",
                 "data": {},
             }
-            return Response(result, status=status.HTTP_200_OK)     
+            return Response(result, status=status.HTTP_200_OK)
 
-def ticket_sub_getter(tickets :Ticket, request):
-    serializer = TicketSerializer(tickets, many=True, context={'request': request})
+
+def ticket_sub_getter(tickets: Ticket, request):
+    serializer = TicketSerializer(
+        tickets, many=True, context={'request': request})
 
     serializer_ticket = serializer.data
     for ticket in serializer_ticket:
-        #modify service field
+        # modify service field
         service = ticket["service"]
-        id = service[service.find('service')+7: ]
+        id = service[service.find('service')+7:]
         id = id.replace('/', '')
 
         service = Service.objects.get(id=id)
         serializer = ServiceSerializer(service, context={'request': request})
         ticket["service"] = serializer.data["nom"]
-        
-        #modify client field
+
+        # modify client field
         client = ticket["client"]
-        id = client[client.find('client')+6: ]
+        id = client[client.find('client')+6:]
         id = id.replace('/', '')
 
         client = Client.objects.get(id=id)
         serializer = ClientSerializer(client, context={'request': request})
-        ticket["client"] = serializer.data["nom"] + " " + serializer.data["prenom"]
+        ticket["client"] = serializer.data["nom"] + \
+            " " + serializer.data["prenom"]
 
-        #modify technician field
+        # modify technician field
         tech = ticket["technicien"]
         if tech is None:
             ticket["technicien"] = "Aucun"
         else:
-            id = tech[tech.find('technicien')+10: ]
+            id = tech[tech.find('technicien')+10:]
             id = id.replace('/', '')
 
             tech = Technicien.objects.get(id=id)
             ticket["technicien"] = tech.nom + " " + tech.prenom
 
-        #get priority of ticket
+        # get priority of ticket
         problem = ticket["probleme"]
 
         if problem is None:
             ticket["priorite"] = "Inconnu"
         else:
-            id = problem[problem.find('probleme')+8: ]
+            id = problem[problem.find('probleme')+8:]
             id = id.replace('/', '')
-            
+
             switcher = {
                 -1: 'Inconnu',
                 0: 'Normal',
@@ -157,15 +169,15 @@ def ticket_sub_getter(tickets :Ticket, request):
 
             problem = Probleme.objects.get(id=id)
             ticket["priorite"] = switcher.get(problem.priorite, "Inconnu")
-        
+
         ticket.pop('probleme')
-        
-        #arrange date format
+
+        # arrange date format
         dates = ticket["date_creation"]
-        dates = dates[ : 19]
+        dates = dates[: 19]
         dates = dates.replace('T', ' à ')
         ticket["date_creation"] = dates
-    
+
     result = {
         "success": True,
         "message": "Opération éffectuée avec succès",
@@ -174,7 +186,8 @@ def ticket_sub_getter(tickets :Ticket, request):
 
     return result
 
-def ticket_getter(tickets :Ticket, request):
+
+def ticket_getter(tickets: Ticket, request):
     """
         Basic ticket function used by all other views based on collecting tickets.
         This function is used to limit code repetition
@@ -191,32 +204,34 @@ def ticket_getter(tickets :Ticket, request):
 def get_technicien(request):
 
     technicien = Technicien.objects.all()
-    serializer = TechnicienSerializer(technicien, many=True, context={'request': request})
+    serializer = TechnicienSerializer(
+        technicien, many=True, context={'request': request})
 
     serializer_technicien = serializer.data
     for tech in serializer_technicien:
-        #modify service field
+        # modify service field
         service = tech["service"]
-        id = service[service.find('service')+7: ]
+        id = service[service.find('service')+7:]
         id = id.replace('/', '')
 
         service = Service.objects.get(id=id)
         serializer = ServiceSerializer(service, context={'request': request})
         tech["service"] = serializer.data["nom"]
-        
-        #count number of current tickets
+
+        # count number of current tickets
         for t in technicien:
             if str(t.id) == tech["id"]:
-                tickets = Ticket.objects.filter(technicien=t).exclude(etat="Terminé")
+                tickets = Ticket.objects.filter(
+                    technicien=t).exclude(etat="Terminé")
                 tech["number_ticket"] = len(tickets)
                 break
-        
-        #arrange date format
+
+        # arrange date format
         dates = tech["date_inscription"]
-        dates = dates[ : 19]
+        dates = dates[: 19]
         dates = dates.replace('T', ' à ')
         tech["date_inscription"] = dates
-    
+
     result = {
         "success": True,
         "message": "Opération éffectuée avec succès",
@@ -224,6 +239,7 @@ def get_technicien(request):
     }
 
     return Response(result, status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 def get_tickets(request):
@@ -234,14 +250,17 @@ def get_tickets(request):
     tickets = Ticket.objects.filter(deleted=False).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
 
+
 @api_view(['GET'])
 def get_new_tickets(request):
     """
         This view permits to get new the tickets (tickets that haven't been allocated to a technician)
     """
 
-    tickets = Ticket.objects.filter(technicien=None, deleted=False).order_by('-date_creation')
+    tickets = Ticket.objects.filter(
+        technicien=None, deleted=False).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
+
 
 @api_view(['GET'])
 def get_waiting_tickets(request):
@@ -249,8 +268,10 @@ def get_waiting_tickets(request):
         This view permits to get all waiting tickets (tickets that have been allocated to a technician)
     """
 
-    tickets = Ticket.objects.filter(deleted=False, etat="En cours").exclude(technicien=None).order_by('-date_creation')
+    tickets = Ticket.objects.filter(deleted=False, etat="En cours").exclude(
+        technicien=None).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
+
 
 @api_view(['GET'])
 def get_finished_tickets(request):
@@ -258,8 +279,10 @@ def get_finished_tickets(request):
         This view permits to get all the finished tickets
     """
 
-    tickets = Ticket.objects.filter(deleted=False, etat="Terminé").exclude(technicien=None).order_by('-date_creation')
+    tickets = Ticket.objects.filter(deleted=False, etat="Terminé").exclude(
+        technicien=None).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
+
 
 @api_view(['GET'])
 def get_relance_tickets(request):
@@ -267,31 +290,34 @@ def get_relance_tickets(request):
         This view permits to get all the relanced tickets
     """
 
-    tickets = Ticket.objects.filter(deleted=False).exclude(etat="Terminé").order_by('-date_creation')
+    tickets = Ticket.objects.filter(deleted=False).exclude(
+        etat="Terminé").order_by('-date_creation')
 
-    #get all relanced associated to a ticket
+    # get all relanced associated to a ticket
     relance = []
-    ticket_relance = []     #contains all the tickets which have been relanced
+    ticket_relance = []  # contains all the tickets which have been relanced
     for tick in tickets:
         if len(Relancer.objects.filter(ticket=tick)) > 0:
             relance.append(Relancer.objects.get(ticket=tick))
             ticket_relance.append(tick)
-    
-    ticket_response = ticket_sub_getter(tickets=ticket_relance, request=request)    #serialize all relanced tickets
 
-    #update data field in response so as to add relanced date and number of relance
+    ticket_response = ticket_sub_getter(
+        tickets=ticket_relance, request=request)  # serialize all relanced tickets
+
+    # update data field in response so as to add relanced date and number of relance
     for data in ticket_response["data"]:
         for tick in relance:
             if str(tick.ticket.id) == data["id"]:
-                #format date
+                # format date
                 dates = str(tick.date_updated)
-                dates = dates[ : 19]
-                
+                dates = dates[: 19]
+
                 data["date_created"] = dates
                 data["nombre_relance"] = tick.nombre_relance
                 break
-    
+
     return Response(ticket_response, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 def ticket_to_technician(request):
@@ -306,15 +332,15 @@ def ticket_to_technician(request):
             "data": {}
         }
         return Response(result, status=status.HTTP_400_BAD_REQUEST)
-        
-    if (request.method=='POST'):
+
+    if (request.method == 'POST'):
         idAdmin = request.data["admin"]
         idTechnicien = request.data["technicien"]
         idTicket = request.data["ticket"]
 
-        ticket = Ticket.objects.get(id = idTicket)
-        technicien = Technicien.objects.get(id = idTechnicien)
-        admin = Administrateur.objects.get(id = idAdmin)
+        ticket = Ticket.objects.get(id=idTicket)
+        technicien = Technicien.objects.get(id=idTechnicien)
+        admin = Administrateur.objects.get(id=idAdmin)
 
         if ticket.technicien is None:
             result = {
@@ -326,7 +352,7 @@ def ticket_to_technician(request):
                 "success": True,
                 "message": "Le technicien affecté au ticket a été changé avec success",
             }
-        
+
         ticket.technicien = technicien
         ticket.admin = admin
         ticket.etat = "En cours"
@@ -336,6 +362,30 @@ def ticket_to_technician(request):
         result["data"] = serializer.data
 
         return Response(result, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_admin_stats(request):
+    """
+        This view is used to get admin stats on different tickets
+    """
+    result = {}
+    num_wait_tik = len(Ticket.objects.filter(deleted=False, etat="En cours").exclude(
+        technicien=None))
+
+    num_new_tik = len(Ticket.objects.filter(
+        technicien=None, deleted=False))
+
+    num_rel_tik = len(Relancer.objects.all().exclude(ticket__etat="Terminé"))
+
+    num_tech_tik = len(Technicien.objects.all())
+
+    result["num_wait_tik"] = num_wait_tik
+    result["num_new_tik"] = num_new_tik
+    result["num_rel_tik"] = num_rel_tik
+    result["num_tech_tik"] = num_tech_tik
+
+    return Response(result, status=status.HTTP_200_OK)
 
 
 """ ---------------------------------------------- CLIENT ---------------------------------------------- """
@@ -348,8 +398,10 @@ def get_user_tickets(request, id):
     """
 
     client = Client.objects.get(id=id)
-    tickets = Ticket.objects.filter(deleted=False, client=client).exclude(technicien=None).order_by('-date_creation')
+    tickets = Ticket.objects.filter(
+        deleted=False, client=client).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
+
 
 @api_view(['GET'])
 def get_user_waiting_tickets(request, id):
@@ -358,8 +410,10 @@ def get_user_waiting_tickets(request, id):
     """
 
     client = Client.objects.get(id=id)
-    tickets = Ticket.objects.filter(deleted=False, client=client, etat="En cours").exclude(technicien=None).order_by('-date_creation')
+    tickets = Ticket.objects.filter(deleted=False, client=client, etat="En cours").exclude(
+        technicien=None).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
+
 
 @api_view(['GET'])
 def get_user_finished_tickets(request, id):
@@ -368,8 +422,10 @@ def get_user_finished_tickets(request, id):
     """
 
     client = Client.objects.get(id=id)
-    tickets = Ticket.objects.filter(deleted=False, client=client, etat="Terminé").exclude(technicien=None).order_by('-date_creation')
+    tickets = Ticket.objects.filter(deleted=False, client=client, etat="Terminé").exclude(
+        technicien=None).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
+
 
 @api_view(['GET'])
 def get_user_relance_tickets(request, id):
@@ -378,31 +434,34 @@ def get_user_relance_tickets(request, id):
     """
 
     client = Client.objects.get(id=id)
-    tickets = Ticket.objects.filter(deleted=False, client=client).exclude(etat="Terminé").order_by('-date_creation')
+    tickets = Ticket.objects.filter(deleted=False, client=client).exclude(
+        etat="Terminé").order_by('-date_creation')
 
-    #get all relanced associated to a ticket
+    # get all relanced associated to a ticket
     relance = []
-    ticket_relance = []     #contains all the tickets which have been relanced
+    ticket_relance = []  # contains all the tickets which have been relanced
     for tick in tickets:
         if len(Relancer.objects.filter(ticket=tick)) > 0:
             relance.append(Relancer.objects.get(ticket=tick))
             ticket_relance.append(tick)
-    
-    ticket_response = ticket_sub_getter(tickets=ticket_relance, request=request)    #serialize all relanced tickets
 
-    #update data field in response so as to add relanced date and number of relance
+    ticket_response = ticket_sub_getter(
+        tickets=ticket_relance, request=request)  # serialize all relanced tickets
+
+    # update data field in response so as to add relanced date and number of relance
     for data in ticket_response["data"]:
         for tick in relance:
             if str(tick.ticket.id) == data["id"]:
-                #format date
+                # format date
                 dates = str(tick.date_updated)
-                dates = dates[ : 19]
-                
+                dates = dates[: 19]
+
                 data["date_created"] = dates
                 data["nombre_relance"] = tick.nombre_relance
                 break
-    
+
     return Response(ticket_response, status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 def relance_a_ticket(request, id):
@@ -412,11 +471,11 @@ def relance_a_ticket(request, id):
 
     ticket = Ticket.objects.get(id=id)
     try:
-        #verify if a relance with this particular ticket exists. If it exists, we just increment the number of relance, else we create a new
+        # verify if a relance with this particular ticket exists. If it exists, we just increment the number of relance, else we create a new
         relance = Relancer.objects.get(ticket=ticket)
         relance.nombre_relance = relance.nombre_relance + 1
         relance.save()
-        
+
         serializer = RelancerSerializer(relance, context={'request': request})
 
         result = {
@@ -440,6 +499,32 @@ def relance_a_ticket(request, id):
         return Response(result, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+def get_user_stats(request, id):
+    """
+        This view is used to get admin stats on different tickets
+    """
+    result = {}
+    client = Client.objects.get(id=id)
+    tickets = Ticket.objects.filter(deleted=False, client=client)
+
+    num_wait_tik = len(tickets.filter(etat="En cours"))
+
+    num_fin_tik = len(tickets.filter(etat="Terminé"))
+
+    num_rel_tik = len(Relancer.objects.all().exclude(
+        ticket__etat="Terminé").filter(ticket__client=client))
+
+    num_new_tik = len(tickets.filter(etat="Non attribué"))
+
+    result["num_wait_tik"] = num_wait_tik
+    result["num_new_tik"] = num_new_tik
+    result["num_rel_tik"] = num_rel_tik
+    result["num_fin_tik"] = num_fin_tik
+
+    return Response(result, status=status.HTTP_200_OK)
+
+
 """ ---------------------------------------------- TECHNICIAN ---------------------------------------------- """
 
 
@@ -450,8 +535,10 @@ def get_technician_tickets(request, id):
     """
 
     technicien = Technicien.objects.get(id=id)
-    tickets = Ticket.objects.filter(deleted=False, technicien=technicien).exclude(technicien=None).order_by('-date_creation')
+    tickets = Ticket.objects.filter(deleted=False, technicien=technicien).exclude(
+        technicien=None).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
+
 
 @api_view(['GET'])
 def get_technician_waiting_tickets(request, id):
@@ -460,8 +547,10 @@ def get_technician_waiting_tickets(request, id):
     """
 
     technicien = Technicien.objects.get(id=id)
-    tickets = Ticket.objects.filter(deleted=False, technicien=technicien, etat="En cours").exclude(technicien=None).order_by('-date_creation')
+    tickets = Ticket.objects.filter(deleted=False, technicien=technicien, etat="En cours").exclude(
+        technicien=None).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
+
 
 @api_view(['GET'])
 def get_technician_finished_tickets(request, id):
@@ -470,7 +559,8 @@ def get_technician_finished_tickets(request, id):
     """
 
     technicien = Technicien.objects.get(id=id)
-    tickets = Ticket.objects.filter(deleted=False, technicien=technicien, etat="Terminé").exclude(technicien=None).order_by('-date_creation')
+    tickets = Ticket.objects.filter(deleted=False, technicien=technicien, etat="Terminé").exclude(
+        technicien=None).order_by('-date_creation')
     return ticket_getter(tickets=tickets, request=request)
 
 
@@ -481,31 +571,34 @@ def get_technician_relance_tickets(request, id):
     """
 
     technicien = Technicien.objects.get(id=id)
-    tickets = Ticket.objects.filter(deleted=False, technicien=technicien).exclude(etat="Terminé").order_by('-date_creation')
+    tickets = Ticket.objects.filter(deleted=False, technicien=technicien).exclude(
+        etat="Terminé").order_by('-date_creation')
 
-    #get all relanced associated to a ticket
+    # get all relanced associated to a ticket
     relance = []
-    ticket_relance = []     #contains all the tickets which have been relanced
+    ticket_relance = []  # contains all the tickets which have been relanced
     for tick in tickets:
         if len(Relancer.objects.filter(ticket=tick)) > 0:
             relance.append(Relancer.objects.get(ticket=tick))
             ticket_relance.append(tick)
-    
-    ticket_response = ticket_sub_getter(tickets=ticket_relance, request=request)    #serialize all relanced tickets
 
-    #update data field in response so as to add relanced date and number of relance
+    ticket_response = ticket_sub_getter(
+        tickets=ticket_relance, request=request)  # serialize all relanced tickets
+
+    # update data field in response so as to add relanced date and number of relance
     for data in ticket_response["data"]:
         for tick in relance:
             if str(tick.ticket.id) == data["id"]:
-                #format date
+                # format date
                 dates = str(tick.date_updated)
-                dates = dates[ : 19]
+                dates = dates[: 19]
 
                 data["date_created"] = dates
                 data["nombre_relance"] = tick.nombre_relance
                 break
-    
+
     return Response(ticket_response, status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 def finalize_ticket(request, id):
@@ -520,7 +613,7 @@ def finalize_ticket(request, id):
             "data": {}
         }
         return Response(result, status=status.HTTP_200_OK)
-    
+
     ticket.etat = 'Terminé'
     ticket.save()
 
@@ -529,7 +622,32 @@ def finalize_ticket(request, id):
         "message": "La finalisation du ticket a été éffectué",
         "data": {}
     }
-    print(send_email('franklinfrost14@gmail.com'))
+    # print(send_email('franklinfrost14@gmail.com'))
+
+    return Response(result, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_technician_stats(request, id):
+    """
+        This view is used to get admin stats on different tickets
+    """
+    result = {}
+
+    technicien = Technicien.objects.get(id=id)
+    tickets = Ticket.objects.filter(
+        deleted=False, technicien=technicien).exclude(technicien=None)
+
+    num_wait_tik = len(tickets.filter(etat="En cours"))
+
+    num_fin_tik = len(tickets.filter(etat="Terminé"))
+
+    num_rel_tik = len(Relancer.objects.all().exclude(
+        ticket__etat="Terminé").filter(ticket__technicien=technicien))
+
+    result["num_wait_tik"] = num_wait_tik
+    result["num_fin_tik"] = num_fin_tik
+    result["num_rel_tik"] = num_rel_tik
 
     return Response(result, status=status.HTTP_200_OK)
 

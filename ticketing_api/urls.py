@@ -22,17 +22,24 @@ urlpatterns = [
     path('finished-tickets/', views.get_finished_tickets),
     path('relanced-tickets/', views.get_relance_tickets),
     path('affect-tickets/', views.ticket_to_technician),
-    
+    path('admin-stats/', views.get_admin_stats),
+
     path('all-user-tickets/<str:id>/', views.get_user_tickets),
     path('waiting-user-tickets/<str:id>/', views.get_user_waiting_tickets),
     path('finished-user-tickets/<str:id>/', views.get_user_finished_tickets),
     path('relanced-user-tickets/<str:id>/', views.get_user_relance_tickets),
-    path('relancer-tickets/<str:id>/', views.relance_a_ticket),         #permits a user to relance a ticket
+    path('user-stats/<str:id>/', views.get_user_stats),
+    # permits a user to relance a ticket
+    path('relancer-tickets/<str:id>/', views.relance_a_ticket),
 
     path('all-technician-tickets/<str:id>/', views.get_technician_tickets),
-    path('waiting-technician-tickets/<str:id>/', views.get_technician_waiting_tickets),
-    path('finished-technician-tickets/<str:id>/', views.get_technician_finished_tickets),
-    path('relanced-technician-tickets/<str:id>/', views.get_technician_relance_tickets),
+    path('waiting-technician-tickets/<str:id>/',
+         views.get_technician_waiting_tickets),
+    path('finished-technician-tickets/<str:id>/',
+         views.get_technician_finished_tickets),
+    path('relanced-technician-tickets/<str:id>/',
+         views.get_technician_relance_tickets),
+    path('technician-stats/<str:id>/', views.get_technician_stats),
     path('finalize-tickets/<str:id>/', views.finalize_ticket),
 
 
