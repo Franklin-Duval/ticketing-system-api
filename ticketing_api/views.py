@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 
 from .models import *
 from .serializers import *
-from .send_email import send_email
+from .send_email import send_email_technician, send_email_user
 
 # Create your views here.
 
@@ -519,6 +519,14 @@ def relance_a_ticket(request, id):
     """
 
     ticket = Ticket.objects.get(id=id)
+    if ticket.etat == "Terminé":
+        result = {
+            "success": True,
+            "message": "Le ticket est déjà terminé. Impossible de le relancer.",
+            "data": {}
+        }
+        return Response(result, status=status.HTTP_200_OK)
+
     try:
         # verify if a relance with this particular ticket exists. If it exists, we just increment the number of relance, else we create a new
         relance = Relancer.objects.get(ticket=ticket)
@@ -532,7 +540,7 @@ def relance_a_ticket(request, id):
             "message": "Le nombre de relance de ce ticket a été mis à jour",
             "data": serializer.data
         }
-
+        print(send_email_technician(ticket.technicien.email))
         return Response(result, status=status.HTTP_200_OK)
     except:
         relance = Relancer(ticket=ticket)
@@ -545,6 +553,7 @@ def relance_a_ticket(request, id):
             "data": serializer.data
         }
         relance.save()
+        print(send_email_technician(ticket.technicien.email))
         return Response(result, status=status.HTTP_200_OK)
 
 
@@ -671,7 +680,7 @@ def finalize_ticket(request, id):
         "message": "La finalisation du ticket a été éffectué",
         "data": {}
     }
-    # print(send_email('franklinfrost14@gmail.com'))
+    print(send_email_user(ticket.client.email))
 
     return Response(result, status=status.HTTP_200_OK)
 
