@@ -15,7 +15,17 @@ def send_email_user(destinataire):
 def send_email_technician(destinataire):
     return send_mail(
         "Relance d'un ticket",
-        "Nous vous informons que l'un des ticket dont vous avez la charge a été relancé par l'utilisateur.\n Veuillez accedez et repondre a sa demande le plus tôt possible",
+        "Nous vous informons que l'un des ticket dont vous avez la charge a été relancé par l'utilisateur.\nVeuillez accedez et repondre a sa demande le plus tôt possible",
+        "franklinfrost14@gmail.com",
+        [destinataire],
+        fail_silently=False
+    )
+
+
+def send_email_admin(destinataire):
+    return send_mail(
+        "Relance d'un ticket",
+        "Nous vous informons que l'un des ticket dont vous avez la charge a été relancé par l'utilisateur.\nVeuillez attribuez ce ticket à un technicien afin de le traiter le plus tôt possible",
         "franklinfrost14@gmail.com",
         [destinataire],
         fail_silently=False

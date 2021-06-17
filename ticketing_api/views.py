@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 
 from .models import *
 from .serializers import *
-from .send_email import send_email_technician, send_email_user
+from .send_email import send_email_technician, send_email_user, send_email_admin
 
 # Create your views here.
 
@@ -540,7 +540,11 @@ def relance_a_ticket(request, id):
             "message": "Le nombre de relance de ce ticket a été mis à jour",
             "data": serializer.data
         }
-        print(send_email_technician(ticket.technicien.email))
+        if ticket.etat == "Non attribué":
+            admin = Administrateur.objects.all()[0]
+            print(send_email_admin(admin.email))
+        else:
+            print(send_email_technician(ticket.technicien.email))
         return Response(result, status=status.HTTP_200_OK)
     except:
         relance = Relancer(ticket=ticket)
