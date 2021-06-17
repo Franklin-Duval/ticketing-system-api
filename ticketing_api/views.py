@@ -94,12 +94,14 @@ def login(request):
         user = None
         try:
             user = Utilisateur.objects.filter(email=email, password=password)
-            print(user, "\n")
+
             serializer = UtilisateurSerializer(
                 user, many=True, context={'request': request})
-            print(serializer.data)
+
             data = serializer.data[0]
             data.pop("date_inscription")
+            data.pop("password")
+
             result = {
                 "success": True,
                 "message": "La connexion s'est bien passée",
@@ -386,6 +388,53 @@ def get_admin_stats(request):
     result["num_tech_tik"] = num_tech_tik
 
     return Response(result, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_new_problems(request):
+    """
+        This view permits admin to get new problem types created by the users
+    """
+    problemes = Probleme.objects.filter(priorite=-1)
+    serializer = ProblemeSerializer(
+        problemes, many=True, context={'request': request})
+
+    result = {
+        "status": True,
+        "message": "Les nouveaux problèmes ont été récupéré",
+        "data": serializer.data
+    }
+    return Response(result, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def update_problem(request):
+    """
+        This view permits admin to update a new problem types created by the users
+    """
+
+    try:
+        problem = Probleme.objects.get(id=request.data["id"])
+        problem.nom = request.data["nom"]
+        problem.description = request.data["description"]
+        problem.priorite = request.data["priorite"]
+        problem.activate = True
+        problem.save()
+
+        serializer = ProblemeSerializer(problem, context={'request': request})
+        result = {
+            "success": True,
+            "message": "Le problème a été mis à jour sans problème",
+            "data": serializer.data
+        }
+        return Response(result, status=status.HTTP_200_OK)
+    except:
+        result = {
+            "success": True,
+            "message": "Une érreur est survenu",
+            "data": {}
+        }
+        return Response(result, status=status.HTTP_200_OK)
 
 
 """ ---------------------------------------------- CLIENT ---------------------------------------------- """

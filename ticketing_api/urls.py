@@ -23,13 +23,14 @@ urlpatterns = [
     path('relanced-tickets/', views.get_relance_tickets),
     path('affect-tickets/', views.ticket_to_technician),
     path('admin-stats/', views.get_admin_stats),
+    path('new-problems/', views.get_new_problems),
+    path('update-problem/', views.update_problem),
 
     path('all-user-tickets/<str:id>/', views.get_user_tickets),
     path('waiting-user-tickets/<str:id>/', views.get_user_waiting_tickets),
     path('finished-user-tickets/<str:id>/', views.get_user_finished_tickets),
     path('relanced-user-tickets/<str:id>/', views.get_user_relance_tickets),
     path('user-stats/<str:id>/', views.get_user_stats),
-    # permits a user to relance a ticket
     path('relancer-tickets/<str:id>/', views.relance_a_ticket),
 
     path('all-technician-tickets/<str:id>/', views.get_technician_tickets),

@@ -47,7 +47,7 @@ class Probleme(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nom = models.CharField(max_length=50, null=False)
-    description = models.TextField(null=False)
+    description = models.TextField(null=True)
     priorite = models.IntegerField(choices=PRIORITY, default=-1)
     activate = models.BooleanField(default=False)
 
