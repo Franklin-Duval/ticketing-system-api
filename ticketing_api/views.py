@@ -701,5 +701,50 @@ def get_technician_stats(request, id):
     return Response(result, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+def check_new_technician(request, id):
+    """
+        This view permits a new technician to update his password
+    """
+    try:
+        technicien = Technicien.objects.get(id=id)
+        if technicien.password == "1234":
+            update = True
+        else:
+            update = False
+
+        result = {
+            "status": True,
+            "update": update
+        }
+        return Response(result, status=status.HTTP_200_OK)
+    except:
+        result = {
+            "status": False
+        }
+        return Response(result, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def update_password(request):
+    """
+        This view permits a new technician to update his password
+    """
+    try:
+        technicien = Technicien.objects.get(id=request.data["id"])
+        technicien.password = request.data["password"]
+        technicien.save()
+
+        result = {
+            "status": True
+        }
+        return Response(result, status=status.HTTP_200_OK)
+    except:
+        result = {
+            "status": False
+        }
+        return Response(result, status=status.HTTP_200_OK)
+
+
 def root(request):
     return redirect('api/')

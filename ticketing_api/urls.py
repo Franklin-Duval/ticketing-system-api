@@ -42,6 +42,8 @@ urlpatterns = [
          views.get_technician_relance_tickets),
     path('technician-stats/<str:id>/', views.get_technician_stats),
     path('finalize-tickets/<str:id>/', views.finalize_ticket),
+    path('check-password/<str:id>/', views.check_new_technician),
+    path('update-password/', views.update_password),
 
 
 
