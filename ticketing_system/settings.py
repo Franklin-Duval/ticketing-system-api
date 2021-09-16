@@ -162,10 +162,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-STATICFILES_DIRS = (
-    BASE_DIR / 'static'
-)
-
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST_USER = 'joe@gmail.com' #replace your email here
 EMAIL_HOST = 'smtp.gmail.com'
