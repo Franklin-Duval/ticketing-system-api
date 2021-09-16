@@ -122,11 +122,11 @@ WSGI_APPLICATION = 'ticketing_system.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dbql6msahbi06v',
-        'HOST': 'ec2-54-81-126-150.compute-1.amazonaws.com',
+        'NAME': 'dav3a3800obcjs',
+        'HOST': 'ec2-18-235-4-83.compute-1.amazonaws.com',
         'PORT': 5432,
-        'USER': 'zdnvzkzwuzixki',
-        'PASSWORD': '5f73d9b4483793f58f3022f629eca1c1f80768f6ac0438a10ca53a03619626fb',
+        'USER': 'ycgojosgmdsvjx',
+        'PASSWORD': '2a0b3c526ce34b4f7133d87a2ea68ea8a0db47ae135b42778eab23c0f4e8bbb3',
     }
 }
 
