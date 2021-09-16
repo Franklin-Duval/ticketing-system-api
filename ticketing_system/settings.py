@@ -104,26 +104,24 @@ WSGI_APPLICATION = 'ticketing_system.wsgi.application'
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 # Configurations de SQLite
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # Configuration de PostgreSQL
-""" DATABASES = {
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ticketing_system',
-        'HOST': 'localhost',
+        'NAME': 'dbql6msahbi06v',
+        'HOST': 'ec2-54-81-126-150.compute-1.amazonaws.com',
         'PORT': 5432,
-        'USER': 'username',
-        'PASSWORD': 'password',
+        'USER': 'zdnvzkzwuzixki',
+        'PASSWORD': '5f73d9b4483793f58f3022f629eca1c1f80768f6ac0438a10ca53a03619626fb',
     }
 }
-
- """
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
